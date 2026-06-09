@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ivalua Prozessassistent</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; padding: 2rem; }
+  .container { max-width: 700px; margin: 0 auto; }
+  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+  .role-btn { display: inline-block; padding: 9px 14px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; font-size: 13px; margin: 4px; background: #fff; color: #1a1a1a; transition: all 0.15s; }
+  .role-btn:hover { background: #f5f5f5; }
+  .role-btn.active { background: #E1F5EE; border-color: #0F6E56; color: #085041; font-weight: 500; }
+  .proc-btn { display: inline-block; padding: 10px 18px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; font-size: 13px; margin: 4px; background: #fff; color: #1a1a1a; transition: all 0.15s; }
+  .proc-btn:hover { background: #f5f5f5; }
+  .proc-btn.contract { border-color: #185FA5; color: #0C447C; background: #E6F1FB; }
+  .proc-btn.onboarding { border-color: #0F6E56; color: #085041; background: #E1F5EE; }
+  .step-btn { display: block; width: 100%; text-align: left; padding: 10px 14px; border: 1px solid #e5e5e5; border-radius: 8px; cursor: pointer; font-size: 13px; margin-bottom: 8px; background: #fff; color: #1a1a1a; transition: all 0.15s; }
+  .step-btn:hover { background: #f5f5f5; border-color: #ccc; }
+  .instruction-box { background: #E6F1FB; border-left: 3px solid #185FA5; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 1rem 0; font-size: 14px; color: #0C447C; line-height: 1.7; }
+  .instruction-box.green { background: #E1F5EE; border-left-color: #0F6E56; color: #085041; }
+  .option-badge { display: inline-block; font-size: 13px; padding: 6px 12px; border-radius: 8px; margin: 4px 0; }
+  .option-ok { background: #E1F5EE; color: #085041; }
+  .option-no { background: #FAECE7; color: #712B13; }
+  .status-bar { background: #f5f5f5; border-radius: 8px; padding: 10px 16px; font-size: 13px; color: #666; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .pill-blue { background: #E6F1FB; color: #0C447C; }
+  .pill-green { background: #E1F5EE; color: #085041; }
+  .nav-btn { padding: 8px 14px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; font-size: 13px; margin: 4px; background: #fff; color: #666; }
+  .nav-btn:hover { background: #f5f5f5; }
+  .progress-bar { height: 4px; background: #e5e5e5; border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .section-label { font-size: 11px; color: #999; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Ivalua Prozessassistent</h1>
+  <p class="subtitle">Wähle deinen Prozess und deine Rolle – du bekommst genau die Anleitung, die du gerade brauchst.</p>
+
+  <!-- SCREEN 0: Prozess wählen -->
+  <div id="s0">
+    <div class="card">
+      <p style="font-size:16px; font-weight:500; margin-bottom:6px;">Welchen Prozess hast du gerade offen?</p>
+      <p style="font-size:13px; color:#666; margin-bottom:1.25rem;">Wähle den Prozess, bei dem du Hilfe brauchst.</p>
+      <button class="proc-btn contract" onclick="selectProcess('contract')"><i class="ti ti-file-text" style="margin-right:8px"></i>Vertragsdokument</button>
+      <button class="proc-btn onboarding" onclick="selectProcess('onboarding')"><i class="ti ti-user-plus" style="margin-right:8px"></i>Partner Onboarding / Aktivierung</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: Rolle wählen -->
+  <div id="s1" style="display:none;">
+    <div class="progress-bar"><div class="progress-fill" id="prog1" style="width:33%; background:#185FA5;"></div></div>
+    <div class="card">
+      <div class="section-label">Schritt 1 von 3 — Rolle</div>
+      <p style="font-size:16px; font-weight:500; margin-bottom:6px;">Wer bist du in diesem Prozess?</p>
+      <p style="font-size:13px; color:#666; margin-bottom:1rem;">Wähle deine Rolle – du siehst dann nur die für dich relevanten Aufgaben.</p>
+      <div id="role-container"></div>
+      <button class="nav-btn" onclick="goTo('s0')" style="margin-top:12px"><i class="ti ti-arrow-left"></i> Prozess ändern</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Aufgabe wählen -->
+  <div id="s2" style="display:none;">
+    <div class="progress-bar"><div class="progress-fill" id="prog2" style="width:66%; background:#185FA5;"></div></div>
+    <div class="card">
+      <div class="section-label">Schritt 2 von 3 — Aufgabe</div>
+      <p style="font-size:16px; font-weight:500; margin-bottom:6px;">Was siehst du gerade in Ivalua?</p>
+      <p style="font-size:13px; color:#666; margin-bottom:1rem;">Wähle die Aufgabe, bei der du nicht weiterkommst.</p>
+      <div id="step-container"></div>
+      <button class="nav-btn" onclick="goTo('s1')" style="margin-top:8px"><i class="ti ti-arrow-left"></i> Rolle ändern</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: Anleitung -->
+  <div id="s3" style="display:none;">
+    <div class="progress-bar"><div class="progress-fill" style="width:100%; background:#1D9E75;"></div></div>
+    <div class="status-bar">
+      <i class="ti ti-map-pin"></i>
+      <span id="s3-loc" style="font-weight:500; color:#1a1a1a;"></span>
+      <span class="pill" id="s3-proc-pill"></span>
+      <span class="pill" id="s3-role-pill" style="background:#f0f0f0; color:#444;"></span>
+    </div>
+    <div class="card">
+      <p style="font-size:16px; font-weight:500; margin-bottom:4px;" id="s3-title"></p>
+      <div class="instruction-box" id="s3-body"></div>
+      <div style="margin-top:1rem;" id="s3-options"></div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="nav-btn" onclick="goTo('s2')"><i class="ti ti-arrow-left"></i> Andere Aufgabe</button>
+      <button class="nav-btn" onclick="resetAll()"><i class="ti ti-refresh"></i> Neu starten</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const data = {
+  contract: {
+    label: 'Vertragsdokument',
+    color: 'blue',
+    roles: {
+      creator: { label: 'Vertragsersteller', icon: 'ti-file-plus', steps: ['ini','cre_doc','doc_rev'] },
+      legal: { label: 'Team Vertragsrecht intern', icon: 'ti-scale', steps: ['leg_rev'] },
+      ext_legal: { label: 'Externe Kanzlei', icon: 'ti-building', steps: ['ext_leg_rev'] },
+      qm: { label: 'Qualitätsmanagement', icon: 'ti-certificate', steps: ['qm_rev'] },
+      datenschutz: { label: 'Datenschutz', icon: 'ti-shield', steps: ['dp_rev'] },
+      nachhaltigkeit: { label: 'Nachhaltigkeit', icon: 'ti-leaf', steps: ['sus_rev'] },
+      weitere: { label: 'Weiterer Prüfer', icon: 'ti-user', steps: ['oth_rev'] },
+      partner: { label: 'Partner (extern)', icon: 'ti-building-store', steps: ['sup_rev'] },
+      genehmiger: { label: 'Zusätzlicher Genehmiger', icon: 'ti-check', steps: ['add_app1'] },
+      vertragsteam: { label: 'Finale Prüfung Vertragsteam', icon: 'ti-users', steps: ['fin_rev_inte','fin_wait_sgn'] }
+    },
+    guidance: {
+      ini: { label: 'Vertragsdokument erstellen', text: 'Du startest den Prozess. Fülle alle Pflichtfelder aus und gib an, welche Teams zur Prüfung eingebunden werden sollen (Recht, QM, Datenschutz, Nachhaltigkeit etc.) – das steuert automatisch, wer später eine Aufgabe erhält.', ok: 'Bestätigen → weiter zu "Ausarbeiten"', no: 'Löschen → Prozess wird abgebrochen' },
+      cre_doc: { label: 'Vertragsdokument ausarbeiten', text: 'Lade die Vertragsvorlage hoch oder wähle eine bestehende aus. Bearbeite den Entwurf. Status ist "Initiale Prüfung". Wenn fertig: Bestätigen klicken.', ok: 'Bestätigen → weiter zur Prüfphase', no: 'Abbrechen → zurück zu "Erstellen"' },
+      leg_rev: { label: 'Prüfung Team Vertragsrecht intern', text: 'Du hast 21 Tage Zeit. Öffne das Vertragsdokument, prüfe es aus rechtlicher Sicht und klicke dann auf die passende Schaltfläche.', ok: '"Prüfung erfolgt" → weiter zur nächsten Prüfstelle', no: '"Dokument anpassen" → zurück zum Ersteller' },
+      ext_leg_rev: { label: 'Prüfung externe Kanzlei', text: 'Du hast 21 Tage Zeit. Öffne das Vertragsdokument, prüfe es anwaltlich und klicke dann auf die passende Schaltfläche.', ok: '"Prüfung erfolgt" → weiter zur nächsten Prüfstelle', no: '"Dokument anpassen" → zurück zum Ersteller' },
+      qm_rev: { label: 'Prüfung Qualitätsmanagement', text: 'Du hast 21 Tage Zeit. Prüfe das Dokument auf Qualitätsstandards.', ok: '"Prüfung erfolgt" → weiter', no: '"Dokument anpassen" → zurück zum Ersteller' },
+      dp_rev: { label: 'Prüfung Datenschutz', text: 'Du hast 21 Tage Zeit. Prüfe das Dokument auf datenschutzrechtliche Anforderungen.', ok: '"Prüfung erfolgt" → weiter', no: '"Dokument anpassen" → zurück zum Ersteller' },
+      sus_rev: { label: 'Prüfung Nachhaltigkeit', text: 'Du hast 21 Tage Zeit. Prüfe das Dokument auf Nachhaltigkeitskriterien.', ok: '"Prüfung erfolgt" → weiter', no: '"Dokument anpassen" → zurück zum Ersteller' },
+      oth_rev: { label: 'Prüfung (Weiterer Prüfer)', text: 'Du hast 21 Tage Zeit. Prüfe das Dokument gemäß deiner Zuständigkeit.', ok: '"Prüfung erfolgt" → weiter zu "Vertragsdokument prüfen"', no: '"Dokument anpassen" → zurück zum Ersteller' },
+      doc_rev: { label: 'Vertragsdokument prüfen', text: 'Alle internen Prüfungen sind abgeschlossen. Entscheide: Geht das Dokument zur Partnerprüfung oder muss es nochmals überarbeitet werden?', ok: '"An Partner senden" → Partner erhält Aufgabe', no: '"Erneut bearbeiten/prüfen" → zurück zur Bearbeitung' },
+      sup_rev: { label: 'Prüfung durch Partner (extern)', text: 'Du hast als externer Partner 28 Tage Zeit (Eskalation nach 70 Tagen). Öffne das Dokument, prüfe den Inhalt und klicke auf die passende Schaltfläche. Bei Ablehnung musst du eine Begründung eingeben.', ok: 'Genehmigen → weiter zur Abschlussprüfung', no: '"Dokument kommentieren" → zurück zur internen Prüfung' },
+      add_app1: { label: 'Prüfung durch Genehmiger', text: 'Du hast 21 Tage Zeit. Prüfe das Vertragsdokument und entscheide ob du zustimmst.', ok: 'Genehmigen → weiter zur finalen Prüfung', no: 'Ablehnen → zurück zu "Vertragsdokument prüfen"' },
+      fin_rev_inte: { label: 'Finale Prüfung Vertragsteam', text: 'Du hast 21 Tage Zeit. Führe die abschließende Vertragsprüfung durch und gib das Dokument zur Unterschrift frei oder lehne ab.', ok: 'Genehmigen → Vorbereitung Unterschrift', no: 'Ablehnen → zurück zu "Vertragsdokument prüfen"' },
+      fin_wait_sgn: { label: 'Vorbereitung Unterschrift', text: 'Das Dokument ist unterschriftsbereit. Bereite die Unterlagen für die digitale oder manuelle Unterschrift vor.', ok: '"Weiter ohne digitale Unterschrift" → Schritt Unterschrift', no: 'Ablehnen → zurück zur Prüfung' }
+    }
+  },
+  onboarding: {
+    label: 'Partner Onboarding',
+    color: 'green',
+    roles: {
+      intern_ap: { label: 'Interner Ansprechpartner (dm)', icon: 'ti-user-check', steps: ['INI','further_info','buy_check','ok_invite','check_qualification','contract'] },
+      partner_kontakt: { label: 'Partnerkontakt (extern)', icon: 'ti-building-store', steps: ['further_info_partner','REG'] },
+      validator: { label: 'Letzte Validatoren / Verantwortlicher', icon: 'ti-shield-check', steps: ['REG'] }
+    },
+    guidance: {
+      INI: { label: 'Registrierung ist erfolgt', text: 'Ein neuer Partner hat sich registriert. Das System prüft automatisch, ob es sich um einen Sub-Partner handelt. Als nächstes musst du die Informationsabfrage an den Partner starten. Klicke auf "Informationsabfrage an Partner senden".', ok: '"Informationsabfrage an Partner senden" → Partner erhält Aufgabe', no: null },
+      further_info: { label: 'Anfrage weiterer Informationen (dm-seitig)', text: 'Das System hat den Partner aufgefordert, weitere Informationen einzureichen. Warte bis der Partner seine Daten vervollständigt hat. Danach läuft automatisch eine Duplikatsprüfung. Wenn ein mögliches Duplikat gefunden wird, bekommst du eine Aufgabe "Prüfung dm".', ok: '"An dm zur Bestätigung senden" → weiter zur Duplikatsprüfung', no: null },
+      further_info_partner: { label: 'Anfrage weiterer Informationen (Partner-seitig)', text: 'Du hast als Partnerkontakt eine Aufforderung erhalten, weitere Informationen zu deinem Unternehmen einzutragen. Öffne das Formular in Ivalua, fülle alle Felder vollständig aus und klicke auf "An dm zur Bestätigung senden".', ok: '"An dm zur Bestätigung senden" → dm erhält die Daten zur Prüfung', no: null },
+      buy_check: { label: 'Prüfung dm (Duplikat-Entscheidung)', text: 'Das System hat einen möglichen Duplikateintrag erkannt. Prüfe, ob der Partner bereits im System existiert. Klicke auf "Informationssammlung starten" um die Prüfung durchzuführen. Danach entscheidest du: Ist es ein Duplikat oder nicht?', ok: '"Kein Duplikat" → Partner wird als Interessent freigegeben', no: '"Duplikat bestätigt" → Partnerdatensatz wird gelöscht' },
+      ok_invite: { label: 'Interessent freigeben', text: 'Die Duplikatsprüfung ist abgeschlossen (kein Duplikat). Jetzt kannst du den Partner offiziell als Interessenten freigeben. Prüfe die Partnerdaten und klicke auf die passende Schaltfläche.', ok: '"Als Interessent freigeben" → weiter zu Qualifizierung prüfen', no: '"Interessentenstatus ablehnen" → zurück zu "Registrierung ist erfolgt"' },
+      check_qualification: { label: 'Qualifizierung prüfen', text: 'Der Partner ist jetzt im Status "Interessent". Prüfe die Qualifikationsunterlagen und entscheide ob der Partner für eine Zusammenarbeit geeignet ist.', ok: '"Qualifizierung freigeben" → weiter zu "Vertragserstellung in Bearbeitung"', no: '"Qualifizierung ablehnen" → zurück zu "Registrierung ist erfolgt"' },
+      contract: { label: 'Vertragserstellung in Bearbeitung', text: 'Die Qualifizierung ist abgeschlossen. Der Vertragsprozess läuft (ggf. separat in Ivalua). Sobald der Vertrag fertig ist, aktivierst du den Partner hier. Klicke auf "Aktivieren" um den Partner zu aktivieren.', ok: '"Aktivieren" → Partner wird aktiviert (Status: Aktiver Partner)', no: '"Aktivierung abbrechen" → zurück zu "Registrierung ist erfolgt"' },
+      REG: { label: 'Partner ohne Onboarding anlegen', text: 'Dieser Partner durchläuft kein Standard-Onboarding (Fast-Track oder Sub-Partner). Du legst ihn direkt an. Klicke auf "Als Partner ohne Onboarding anlegen" um den Prozess abzuschließen.', ok: '"Als Partner ohne Onboarding anlegen" → Partner wird direkt angelegt', no: null }
+    }
+  }
+};
+
+const stepLabels = {
+  INI: 'Registrierung ist erfolgt – ich soll Informationsabfrage starten',
+  further_info: 'Ich warte auf Partnerinformationen / sehe Duplikat-Aufgabe',
+  further_info_partner: 'Ich soll Informationen zu meinem Unternehmen einreichen',
+  buy_check: 'Ich habe eine Aufgabe "Prüfung dm" (Duplikatsentscheidung)',
+  ok_invite: 'Ich soll einen Interessenten freigeben',
+  check_qualification: 'Ich soll die Qualifizierung prüfen',
+  contract: 'Ich soll den Partner aktivieren (Vertrag ist fertig)',
+  REG: 'Ich soll einen Partner ohne Onboarding anlegen',
+  ini: 'Ich soll ein neues Vertragsdokument erstellen',
+  cre_doc: 'Ich bearbeite ein Vertragsdokument (ausarbeiten)',
+  leg_rev: 'Ich habe eine Aufgabe: Prüfung Vertragsrecht intern',
+  ext_leg_rev: 'Ich habe eine Aufgabe: Prüfung externe Kanzlei',
+  qm_rev: 'Ich habe eine Aufgabe: Prüfung Qualitätsmanagement',
+  dp_rev: 'Ich habe eine Aufgabe: Prüfung Datenschutz',
+  sus_rev: 'Ich habe eine Aufgabe: Prüfung Nachhaltigkeit',
+  oth_rev: 'Ich habe eine Aufgabe: Prüfung (Weiterer Prüfer)',
+  doc_rev: 'Ich soll das Dokument prüfen / an Partner senden',
+  sup_rev: 'Ich soll ein Vertragsdokument als Partner prüfen',
+  add_app1: 'Ich habe eine Aufgabe: Prüfung als Genehmiger',
+  fin_rev_inte: 'Ich soll die finale Prüfung durchführen',
+  fin_wait_sgn: 'Ich soll die Unterschrift vorbereiten'
+};
+
+let proc = null, role = null;
+
+function selectProcess(p) {
+  proc = p;
+  const cfg = data[p];
+  const prog = document.getElementById('prog1');
+  prog.style.background = p === 'contract' ? '#185FA5' : '#1D9E75';
+  const rc = document.getElementById('role-container');
+  rc.innerHTML = '';
+  Object.entries(cfg.roles).forEach(([key, r]) => {
+    const btn = document.createElement('button');
+    btn.className = 'role-btn';
+    btn.innerHTML = '<i class="ti ' + r.icon + '" style="margin-right:6px"></i>' + r.label;
+    btn.onclick = () => selectRole(key, btn);
+    rc.appendChild(btn);
+  });
+  goTo('s1');
+}
+
+function selectRole(r, btnEl) {
+  role = r;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
+  const cfg = data[proc];
+  const roleCfg = cfg.roles[r];
+  const sc = document.getElementById('step-container');
+  sc.innerHTML = '';
+  roleCfg.steps.forEach(sid => {
+    const btn = document.createElement('button');
+    btn.className = 'step-btn';
+    btn.innerHTML = '<i class="ti ti-chevron-right" style="margin-right:8px; color:#999"></i>' + (stepLabels[sid] || sid);
+    btn.onclick = () => showGuidance(sid);
+    sc.appendChild(btn);
+  });
+  goTo('s2');
+}
+
+function showGuidance(sid) {
+  const cfg = data[proc];
+  const g = cfg.guidance[sid];
+  if (!g) return;
+  document.getElementById('s3-loc').textContent = g.label;
+  const pp = document.getElementById('s3-proc-pill');
+  pp.textContent = cfg.label;
+  pp.className = 'pill ' + (proc === 'contract' ? 'pill-blue' : 'pill-green');
+  document.getElementById('s3-role-pill').textContent = cfg.roles[role].label;
+  document.getElementById('s3-title').textContent = g.label;
+  const box = document.getElementById('s3-body');
+  box.className = 'instruction-box' + (proc === 'onboarding' ? ' green' : '');
+  box.innerHTML = g.text;
+  const opts = document.getElementById('s3-options');
+  opts.innerHTML = '';
+  if (g.ok || g.no) {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:13px; font-weight:500; color:#1a1a1a; margin:0 0 8px;';
+    p.textContent = 'Deine Optionen:';
+    opts.appendChild(p);
+    if (g.ok) {
+      const d = document.createElement('div');
+      d.innerHTML = '<span class="option-badge option-ok"><i class="ti ti-check" style="margin-right:4px"></i>' + g.ok + '</span>';
+      opts.appendChild(d);
+    }
+    if (g.no) {
+      const d = document.createElement('div');
+      d.innerHTML = '<span class="option-badge option-no"><i class="ti ti-x" style="margin-right:4px"></i>' + g.no + '</span>';
+      opts.appendChild(d);
+    }
+  }
+  goTo('s3');
+}
+
+function goTo(id) {
+  ['s0','s1','s2','s3'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function resetAll() {
+  proc = null; role = null;
+  goTo('s0');
+}
+</script>
+</body>
+</html>
